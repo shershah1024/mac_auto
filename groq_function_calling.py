@@ -1,3 +1,4 @@
+from enum import Enum
 from send_email_gmail_compose import send_email_gmail
 from mac_or_chrome_whatsapp import send_whatsapp_chat
 from groq import Groq
@@ -10,15 +11,20 @@ load_dotenv()
 groq_client = Groq()
 MODEL = 'llama3-70b-8192'
 
-"""
-recipient_email, subject, message_body, file_path
+class FolderPath(Enum):
+    DOWNLOADS = "/Users/shahir/Downloads"
+    DELE_A1_AUDIO = '/Users/shahir/Downloads/Dele A1 new audio'
 
-"""
+class EmailID(Enum):
+    ABDUL = "abdul.shahir@gmail.com"
+    MIRA = "mira@thesmartlanguage.com"
 
-folder_paths= ["/Users/shahir/Downloads", '/Users/shahir/Downloads/Dele A1 new audio']
-example_json={"folder_path": "/sample_path"}
+folder_paths = [path.value for path in FolderPath]
+email_ids = [email.value for email in EmailID]
 
-def groq_sending_email_with_attachment(message):
+example_json = {"folder_path": "/sample_path"}
+
+def send_email_with_attachments(message):
     user_prompt=message
     file_paths = get_file_to_send(message)
     messages=[
@@ -61,10 +67,7 @@ def groq_sending_email_with_attachment(message):
                 }
             }
         },
-
     ]
-
-
 
     response = groq_client.chat.completions.create(
         model=MODEL,
@@ -79,10 +82,8 @@ def groq_sending_email_with_attachment(message):
     tool_calls = response_message.tool_calls
 
     if tool_calls:
-
         available_functions = {
             "send_file_via_mail": send_file_via_mail,
-
         }
 
         for tool_call in tool_calls:
@@ -95,13 +96,11 @@ def groq_sending_email_with_attachment(message):
                     subject=function_args.get("subject"),
                     message_body=function_args.get("message_body"),
                     file_path=function_args.get("file_path"),
-
                 )
                 print(f"the running function is {send_email_gmail}")
 
         print(function_response)
         return function_response
-
 
 def get_folder(message):
     system_message= f"Extract the folder path from the user message. These are the available folders - {folder_paths}. Output in the json format"
@@ -131,16 +130,13 @@ def get_folder(message):
 
     return folder_path
 
-
 def get_file_to_send(message):
     folder_path= get_folder(message)
     files_in_the_folder=get_file_paths(folder_path)
     return files_in_the_folder
 
-
-def email_and_whatsapp_agent(message):
+def send_email(message):
     user_prompt=message
-
 
     messages=[
             {
@@ -178,31 +174,7 @@ def email_and_whatsapp_agent(message):
                 }
             }
         },
-        {
-            "type": "function",
-            "function": {
-                "name": "send_whatsapp_chat",
-                "description": "send a WhatsApp message to the contact",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "contact_name": {
-                           "type": "string",
-                            "enum": ["Ziggi"],
-                            "description": "The name of the contact"
-                        },
-                        "message": {
-                            "type": "string",
-                            "description": "The body of the message"
-                        }
-                    },
-                    "required": ["contact_name", "message"]
-                }
-            }
-        }
     ]
-
-
 
     response = groq_client.chat.completions.create(
         model=MODEL,
@@ -217,7 +189,6 @@ def email_and_whatsapp_agent(message):
     tool_calls = response_message.tool_calls
 
     if tool_calls:
-
         available_functions = {
             "compose_and_send_email": compose_and_send_email,
             "send_whatsapp_chat":send_whatsapp_chat
@@ -244,4 +215,4 @@ def email_and_whatsapp_agent(message):
         return function_response
 
 message= "I have a file called presntations 1 in my downloads folder. Please send it to abdul.shahir@gmail.com"
-groq_sending_email_with_attachment(message)
+send_email_with_attachments(message)

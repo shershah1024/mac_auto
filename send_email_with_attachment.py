@@ -1,5 +1,5 @@
 import subprocess
-from find_a_file import find_similar_files
+
 
 
 def send_file_via_mail(recipient_email, subject, message_body, file_path):
