@@ -2,7 +2,7 @@ from fastapi import FastAPI, Form
 import subprocess
 import uvicorn
 
-app = FastAPI()
+
 
 def send_whatsapp_message(contact_name: str, message: str):
     applescript = f'''
@@ -44,22 +44,4 @@ def send_whatsapp_message(contact_name: str, message: str):
     '''
     result = subprocess.run(["osascript", "-e", applescript], capture_output=True, text=True)
     return result.stdout, result.stderr
-"""
-@app.post("/send-message/")
-def send_message(contact_name: str = Form(...), message: str = Form(...)):
-    stdout, stderr = send_whatsapp_message(contact_name, message)
-    return {"stdout": stdout, "stderr": stderr}
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-
-"""
-contact_name="Ziggi"
-message="""
-Amt Sent Rs.800.00
-From HDFC Bank A/C *3501
-To Mr FAISAL  K
-On 18-06
-For ambulance
-"""
-send_whatsapp_message(contact_name,message)

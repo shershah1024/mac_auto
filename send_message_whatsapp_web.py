@@ -1,6 +1,6 @@
 import subprocess
 
-def send_message_via_whatsapp(contact_name, message):
+def send_message_via_whatsapp_web(contact_name, message):
     script = f'''
     tell application "Google Chrome"
         set commandModifier to {{command down}}
@@ -26,21 +26,24 @@ def send_message_via_whatsapp(contact_name, message):
             end if
         end repeat
 
-        -- If WhatsApp is not open, report back
+        -- If WhatsApp is not open, open it in a new tab
         if not found then
-            return "WhatsApp is not open in any tab."
+            tell window 1
+                make new tab with properties {{URL: whatsappURL}}
+            end tell
+            delay 5 -- Wait for WhatsApp Web to load
         end if
 
         -- Interact with the WhatsApp tab
         tell application "System Events"
-            delay 2 -- Give time for Chrome to become active
-            keystroke "l" using command down -- Focus the address bar
+            delay 1 -- Give time for Chrome to become active
+            keystroke "l" using commandModifier -- Focus the address bar
             delay 0.5
-            keystroke tab -- First tab to move from address bar
+            keystroke tab -- Move to the search area
             delay 0.5
-            keystroke "{contact_name}" -- Type the search query
+            keystroke "{contact_name}" -- Type the contact name
             keystroke return -- Press enter to confirm search
-            delay 2 -- Wait for the chat to open
+            delay 1 -- Wait for the chat to open
             keystroke "{message}" -- Type the message
             keystroke return -- Press enter to send the message
         end tell
@@ -50,8 +53,3 @@ def send_message_via_whatsapp(contact_name, message):
     stdout, stderr = process.communicate(input=script.encode('utf-8'))
     return stdout.decode().strip()
 
-# Example usage
-contact_name = "Ziggi"
-message = "Hello Ziggi"
-result = send_message_via_whatsapp(contact_name, message)
-print("Output:", result)
