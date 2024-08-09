@@ -1,29 +1,30 @@
 import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import requests
+from send_email import send_email
 
 app = FastAPI()
-
-# Use environment variable for ngrok URL
-NGROK_URL = os.environ.get('NGROK_URL')
 
 class IncomingRequest(BaseModel):
     message: str
 
-@app.post("/send_email")
+class EmailResponse(BaseModel):
+    message: str
+    status: str
+
+@app.post("/send_email", response_model=EmailResponse)
 async def send_email_endpoint(email_request: IncomingRequest):
-    if not NGROK_URL:
-        raise HTTPException(status_code=500, detail="NGROK_URL is not set")
-    
-    # Forward the request to your local server through ngrok
-    ngrok_endpoint = f"{NGROK_URL}/send_email"
     try:
-        response = requests.post(ngrok_endpoint, json={"message": email_request.message})
-        response.raise_for_status()  # Raises an HTTPError if the HTTP request returned an unsuccessful status code
-        return {"message": response.json()}
-    except requests.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Error forwarding request: {str(e)}")
+        # Use the imported send_email function
+        send_email(email_request.message)
+        
+        # Return a response indicating the email was sent
+        return EmailResponse(message="Email sent successfully", status="OK")
+    
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error sending email: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error sending email: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

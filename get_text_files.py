@@ -11,10 +11,19 @@ def convert_ts_files_to_pdf(source_folder, target_folder):
     os.makedirs(target_folder, exist_ok=True)
 
     for root, dirs, files in os.walk(source_folder):
+        # Skip node_modules directories
+        if 'node_modules' in dirs:
+            dirs.remove('node_modules')
+
         for file in files:
             if file.endswith(('.ts', '.tsx')):
                 try:
                     source_path = os.path.join(root, file)
+                    
+                    # Skip files in node_modules directories
+                    if 'node_modules' in source_path:
+                        continue
+
                     relative_path = os.path.relpath(source_path, source_folder)
                     # Create a unique filename by replacing path separators
                     unique_filename = sanitize_filename(relative_path.replace(os.sep, '_') + '.pdf')
@@ -36,3 +45,5 @@ def convert_ts_files_to_pdf(source_folder, target_folder):
                 except Exception as e:
                     print(f"Failed to convert {source_path}: {e}")
 
+
+convert_ts_files_to_pdf(source_folder="/Users/shahir/agents-playground/src", target_folder="/Users/shahir/Downloads/target_folder")
